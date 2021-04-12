@@ -63,7 +63,7 @@ void Server::start_answering()
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
-	start_reading();
+	//start_reading();
 
 }
 
@@ -73,10 +73,6 @@ void Server::start_reading()
 
 	boost::asio::async_read_until(socket_, buffer, "\r\n\r\n",
 		boost::bind(&Server::response_recived_cb, this, boost::asio::placeholders::error));
-
-	//socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-	//socket_.close();
-
 }
 
 void Server::response_recived_cb(const boost::system::error_code& error)
@@ -90,8 +86,6 @@ void Server::response_recived_cb(const boost::system::error_code& error)
 
 	msg = abstractProtocol->getAnswer(dataRead);
 
-
-
 	start_answering();
 }
 
@@ -103,7 +97,8 @@ void Server::response_sent_cb(const boost::system::error_code& error,
 	if (!error) {
 		std::cout << "Response sent. " << bytes_sent << " bytes." << std::endl;
 	}
-
+	socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+	socket_.close();
 }
 
 

@@ -41,13 +41,12 @@ int main(int argc, char* argv[])
 
 	//Http myhttp;
 
-	//myhttp.inputTCP = std::string("GET ") + "toRead.txt" + " HTTP/1.1   " + "\r\n" +
+	//std::string request = std::string("GET ") + " HTTP/1.1   " + "/toRead.txt" + "\r\n" +
 	//							"Host: 127.0.0.1" + "\r\n" +
 	//							"al pedo al pedo al pedo" +"\r\n" +
 	//							"\r\n";
 
-	//myhttp.HtppIntrepratateInput();
-	//std::cout << myhttp.HttpSendResponse() << std::endl;
+	//std::cout << myhttp.getAnswer(request) << std::endl;
 
 	try
 	{

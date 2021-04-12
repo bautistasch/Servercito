@@ -73,14 +73,15 @@ void Http::HtppIntrepratateInput()
         {
             std::string myWord = getWord(&txtIndex);
             std::fstream myFile;
-            myFile.open("myWord");
+            std::string realPath = myWord.substr(1, myWord.size() - 1);
+            myFile.open(realPath);
             if (myFile.is_open() == false)
             {
                 state = ERROR_404;
             }
             else
             {
-                HttpPath = myWord;
+                HttpPath = realPath;
                 state = S5;
                 myFile.close();
             }
@@ -158,9 +159,9 @@ void Http::HtppIntrepratateInput()
     }
     if (state == S10)
     {
-        HtppHeaderResponse = std::string("HTTP /1.1 100 OK\r\n") +
+        HtppHeaderResponse = std::string("HTTP/1.1 200 OK\r\n") +
                                         "Date: " + make_daytime_string(0) + CRLF +
-                                        "Location: 127.0.0.1 "  + HttpPath + CRLF +
+                                        "Location: 127.0.0.1 "  + "/"  + HttpPath + CRLF +
                                         "Cache-Control: public, max-age=30" + CRLF +
                                         "Expires : " + make_daytime_string(30) + CRLF +
                                         "Content-Lenght: 0" + CRLF +
@@ -173,8 +174,8 @@ void Http::HtppIntrepratateInput()
             while (!myReadFile.eof()) {
                 HtppBodyResponse += myReadFile.get();
             }
+            HtppBodyResponse = HtppBodyResponse.substr(0, HtppBodyResponse.size() - 1);
         }
-        HtppBodyResponse += CRLF;
         myReadFile.close();
         HtppResponse = HtppHeaderResponse + "\n" + HtppBodyResponse;
     }
