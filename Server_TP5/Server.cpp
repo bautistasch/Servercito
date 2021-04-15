@@ -2,13 +2,10 @@
 
 #include "Server.h"
 
-
 #include <string>
 #include <cstdio>
 
-
 using boost::asio::ip::tcp;
-
 
 Server::Server(boost::asio::io_context& io_context, AbstractProtocol * abst)
 	: context_(io_context),
@@ -26,7 +23,7 @@ void Server::startListening()
 		std::cout << "Error: Can't accept new connection from an open socket" << std::endl;
 		return;
 	}
-	acceptor_.async_accept(			//solo recibe socket que va a administrar la nueva conexion y el callback
+	acceptor_.async_accept(			
 		socket_,
 		boost::bind(
 			&Server::connection_received_cb,
@@ -40,8 +37,6 @@ void Server::connection_received_cb(const boost::system::error_code& error)
 {
 	std::cout << "connection_received_cb()" << std::endl;
 	if (!error) {
-		//start_answering();
-		//startListening();
 		start_reading();
 	}
 	else {
@@ -52,7 +47,7 @@ void Server::connection_received_cb(const boost::system::error_code& error)
 void Server::start_answering()
 {
 	std::cout << "start_answering()" << std::endl;
-	//msg = "OK, RECIBI CONEXION SOY SERVER";
+
 	boost::asio::async_write(
 		socket_,
 		boost::asio::buffer(msg),
@@ -63,7 +58,6 @@ void Server::start_answering()
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
-	//start_reading();
 
 }
 
@@ -72,17 +66,15 @@ void Server::start_reading()
 	std::cout << "start_reading()" << std::endl;
 
 	boost::asio::async_read_until(socket_, buffer, "\r\n\r\n",
-		boost::bind(&Server::response_recived_cb, this, boost::asio::placeholders::error));
+		boost::bind(&Server::response_recived_cb, this, boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred));
 }
 
-void Server::response_recived_cb(const boost::system::error_code& error)
+void Server::response_recived_cb(const boost::system::error_code& error, std::size_t size)
 {
 	std::istream is(&buffer);
 	
 	std::getline(is, dataRead, {});
-
-	std::cout << "HE RECIBIDO: " << dataRead << std::endl;
-	std::cout << "SIZE DE LA DATA QUE ME LLEGO:" << dataRead.size() << std::endl;
 
 	msg = abstractProtocol->getAnswer(dataRead);
 
@@ -99,6 +91,7 @@ void Server::response_sent_cb(const boost::system::error_code& error,
 	}
 	socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 	socket_.close();
+	startListening();
 }
 
 

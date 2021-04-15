@@ -1,15 +1,23 @@
 #include <iostream>
 
 #include <fstream>
-
+#include <string> 
 #include "Http.h"
 
 #define CRLF "\r\n"
 #define HOST "127.0.0.1"
   
 enum states{S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, ERROR, ERROR_404} ;
-static std::string make_daytime_string(int AddedSeconds);
 
+Http::Http()
+{
+    inputTCP = "";
+    HtppResponse = "";;
+    HtppBodyResponse = "";;
+    HtppHeaderResponse = "";;
+
+    HttpPath = "";;
+}
 
 
 std::string Http::getAnswer(std::string dataRead)
@@ -159,14 +167,6 @@ void Http::HtppIntrepratateInput()
     }
     if (state == S10)
     {
-        HtppHeaderResponse = std::string("HTTP/1.1 200 OK\r\n") +
-                                        "Date: " + make_daytime_string(0) + CRLF +
-                                        "Location: 127.0.0.1 "  + "/"  + HttpPath + CRLF +
-                                        "Cache-Control: public, max-age=30" + CRLF +
-                                        "Expires : " + make_daytime_string(30) + CRLF +
-                                        "Content-Lenght: 0" + CRLF +
-                                        "Content - Type: text / html; charset = iso - 8859 - 1" + CRLF;
-
         std::ifstream myReadFile;
         myReadFile.open(HttpPath);
         HtppBodyResponse = "";             // -<<<<<< AL CONSTRUCTOR
@@ -177,21 +177,49 @@ void Http::HtppIntrepratateInput()
             HtppBodyResponse = HtppBodyResponse.substr(0, HtppBodyResponse.size() - 1);
         }
         myReadFile.close();
-        HtppResponse = HtppHeaderResponse + "\n" + HtppBodyResponse;
+
+        std::string filenameLenght = std::to_string(HtppBodyResponse.length());
+
+        time_t now = time(0);
+        tm* nowTm = gmtime(&now);
+        char timeNow[256];
+        strftime(timeNow, 256, "%a, %d %b %Y %T GMT", nowTm);    //Ej: Tue, 04 Sep 2018 18:21:49 GMT
+
+        time_t exp = now + 30;
+        tm* expTm = gmtime(&exp);
+        char timeExp[256];
+        strftime(timeExp, 256, "%a, %d %b %Y %T GMT", expTm);    //Ej: Tue, 04 Sep 2018 18:21:49 GMT
+
+
+        HtppHeaderResponse = std::string("HTTP/1.1 200 OK") + CRLF +
+            "Date: " +  timeNow  + CRLF +
+            "Location: 127.0.0.1" + "/" + HttpPath + CRLF +
+            "Cache-Control: max-age=30" + CRLF +
+            "Expires: " + timeExp + CRLF +
+            "Content-Lenght: " +  filenameLenght + CRLF +
+            "Content-Type: text/html; charset=iso-8859-1"; // 
+        
+        HtppResponse = HtppHeaderResponse + CRLF + CRLF + HtppBodyResponse;
     }
-    else if (state == ERROR_404)
+    else if (state == ERROR_404 || state == ERROR)
     {
-        HtppHeaderResponse = std::string("HTTP / 1.1 404 Not Found\r\n") +
-            "Date: " + make_daytime_string(0) + CRLF +
+        time_t now = time(0);
+        tm* nowTm = gmtime(&now);
+        char timeNow[256];
+        strftime(timeNow, 256, "%a, %d %b %Y %T GMT", nowTm);    //Ej: Tue, 04 Sep 2018 18:21:49 GMT
+
+        time_t exp = now + 30;
+        tm* expTm = gmtime(&exp);
+        char timeExp[256];
+        strftime(timeExp, 256, "%a, %d %b %Y %T GMT", expTm);    //Ej: Tue, 04 Sep 2018 18:21:49 GMT
+
+        HtppHeaderResponse = std::string("HTTP/1.1 404 Not Found") + CRLF
+            "Date: " + timeNow + CRLF +
             "Cache-Control: public, max-age=30" + CRLF +
-            "Expires : " + make_daytime_string(30) + CRLF +
+            "Expires : " + timeExp + CRLF +
             "Content-Lenght: 0" + CRLF +
-            "Content - Type: text / html; charset = iso - 8859 - 1" + CRLF;
+            "Content-Type: text/html; charset=iso-8859-1" + CRLF;
         HtppResponse = HtppHeaderResponse;
-    }
-    else if (state == ERROR)
-    {
-        HtppResponse = "NI ERROR 404";
     }
 }
 
@@ -211,12 +239,6 @@ std::string Http::getWord(int * index)
     {
         for (*index; *index < inputTCP.size() && (!spaceDetected || inputTCP[*index] == ' ') && inputTCP[*index] != '\r' ; (*index)++)
         {
-            //if (inputTCP[*index] == '\n')   // CLRF
-            //{
-            //    word += inputTCP[*index];
-            //    (*index)++;
-            //    break;
-            //}
             if (inputTCP[*index] == ' ')
             {
                 spaceDetected = true;
@@ -227,16 +249,5 @@ std::string Http::getWord(int * index)
             }
         }
     }
-    
-
-
     return word;
-}
-
-std::string make_daytime_string(int AddedSeconds)
-{
-#pragma warning(disable : 4996)
-    std::time_t now = std::time(0) + (std::time_t)AddedSeconds;
-    std::string str = std::ctime(&now);
-    return str.substr(0, str.size() - 1);
 }

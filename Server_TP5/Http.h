@@ -5,7 +5,7 @@
 
 class Http : public AbstractProtocol{
 public:
-
+	Http();
 	std::string getAnswer(std::string dataRead);
 
 private:

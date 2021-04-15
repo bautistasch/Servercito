@@ -13,15 +13,12 @@ public:
 	Server(boost::asio::io_context& context, AbstractProtocol * a);
 	void startListening();
 	AbstractProtocol * abstractProtocol;
-	//void stopListening();
-	//bool isNewConnection();
-	//void getNewConnection(connection);
 private:
 	void start_answering();
 	void start_reading();
 	void connection_received_cb(const boost::system::error_code& error);
 	void response_sent_cb(const boost::system::error_code& error, size_t bytes_sent);
-	void response_recived_cb(const boost::system::error_code& error);
+	void response_recived_cb(const boost::system::error_code& error, std::size_t size);
 
 	std::string dataRead;
 
